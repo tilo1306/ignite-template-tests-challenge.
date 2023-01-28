@@ -1,29 +1,26 @@
 import { InMemoryUsersRepository } from "../../../repositories/in-memory/InMemoryUsersRepository";
 import { CreateUserUseCase } from "../CreateUserUseCase";
-import { hash } from 'bcryptjs';
 import { CreateUserError } from "../CreateUserError";
 
-let createUserUseCase:CreateUserUseCase
+let createUserUseCase: CreateUserUseCase
 let inMemoryUsersRepository: InMemoryUsersRepository
 
-describe("Create User",()=>{
-    beforeEach(()=>{
-
+describe("Create User", () => {
+    beforeEach(() => {
+        inMemoryUsersRepository = new InMemoryUsersRepository();
+        createUserUseCase = new CreateUserUseCase(inMemoryUsersRepository);
     })
-     inMemoryUsersRepository = new InMemoryUsersRepository();
-     createUserUseCase = new CreateUserUseCase(inMemoryUsersRepository);
 
     it("should be able to create a new user", async () => {
 
         const newUser = {
             name: "Douglas",
-            email:"douglas@test.com",
+            email: "douglas@test.com",
             password: "123456"
         };
 
-
         const user = await createUserUseCase.execute(newUser)
-        
+
         expect(user).toHaveProperty('id')
         expect(user).toHaveProperty('email')
         expect(user).toHaveProperty('name')
@@ -33,16 +30,19 @@ describe("Create User",()=>{
 
     })
 
-    it("should not be able to create a user with exists email", async () => {
+    it("should not be able to create a user with exists email", () => {
+        expect(
+            async () => {
+                const newUser = {
+                    name: "Douglas",
+                    email: "douglas@test.com",
+                    password: "123456"
+                };
 
-        const newUser = {
-            name: "Douglas",
-            email:"douglas@test.com",
-            password: "123456"
-        };
+                await createUserUseCase.execute(newUser)
+                await createUserUseCase.execute(newUser)
 
-        await createUserUseCase.execute(newUser)        
-        expect(createUserUseCase.execute(newUser)).rejects.toEqual(new CreateUserError())
-               
+            }).rejects.toBeInstanceOf(CreateUserError)
+
     })
 })
